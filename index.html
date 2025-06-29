@@ -3,17 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Dual Multi-Tuning Pianos (Pianish/Synth Waves)</title>
+    <title>Dual Multi-Tuning Pianos with Effects & MIDI</title>
     <style>
-        /* CSS from previous version */
-        body{display:flex;flex-direction:column;align-items:center;min-height:100vh;background-color:#2c3e50;margin:0;padding:20px 0;font-family:sans-serif;overflow-y:auto;overflow-x:hidden;-webkit-tap-highlight-color:transparent}.keyboard-section{width:100%;display:flex;flex-direction:column;align-items:center;margin-bottom:30px}.header-controls{display:flex;flex-direction:column;align-items:center;margin-bottom:15px;color:#ecf0f1;width:90%;max-width:1000px}.header-controls h2{margin-top:0;margin-bottom:10px;font-size:1.5em}.controls-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;width:100%;align-items:center}.control-group{display:flex;align-items:center;justify-content:center;padding:5px;flex-wrap:nowrap}.octave-controls button{padding:7px 10px;margin:0 4px;background-color:#3498db;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.85em}.octave-controls button:hover{background-color:#2980b9}.control-group span{font-size:.85em;margin:0 5px;white-space:nowrap}.slider-input{width:80px;margin-left:4px}.control-select{padding:6px 8px;border-radius:4px;border:1px solid #7f8c8d;background-color:#ecf0f1;color:#2c3e50;font-size:.85em;margin-left:4px;min-width:140px}.piano-container{display:flex;justify-content:flex-start;width:95%;max-width:100%;padding:10px;background-color:#34495e;border-radius:10px;box-shadow:0 5px 15px rgba(0,0,0,.2);overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}.piano{display:flex;position:relative;width:fit-content;height:180px}.key{border:1px solid #1c2833;box-sizing:border-box;cursor:pointer;-webkit-user-select:none;-moz-user-select:none;user-select:none;transition:background-color .05s ease,transform .05s ease;display:flex;flex-direction:column;justify-content:space-around;align-items:center;padding:5px 2px;text-align:center;margin-right:1px;width:30px;min-width:18px;flex-shrink:0}.key.is-white{background-color:#f8f9fa;color:#212529}.key.is-black{background-color:#343a40;color:#f8f9fa;border-color:#212529}.key:last-child{margin-right:0}.key-step-label{font-size:.8em;font-weight:700;display:block}.key-interval-label{font-size:.55em;line-height:1;display:block;margin:1px 0}.key-division-info{font-size:.5em;line-height:1;display:block}.key.active,.key:active{filter:brightness(.85)}.key.is-white.active,.key.is-white:active{background-color:#ced4da;color:#000}.key.is-black.active,.key.is-black:active{background-color:#5a6268;color:#fff}.key.active{transform:scaleY(.97) translateY(2px);box-shadow:inset 0 0 4px rgba(0,0,0,.2)}
+        /* --- Base & Theme Variables --- */
+        :root {
+            --bg-color: #2c3e50;
+            --header-bg: #212f3d;
+            --piano-bg: #34495e;
+            --piano-shadow: rgba(0,0,0,.2);
+            --text-color: #ecf0f1;
+            --text-muted: #bdc3c7;
+            --accent-color: #3498db;
+            --accent-hover: #2980b9;
+            --action-color: #e74c3c;
+            --action-hover: #c0392b;
+            --success-color: #2ecc71;
+            --success-hover: #27ae60;
+            --white-key-bg: #f8f9fa;
+            --white-key-text: #212529;
+            --white-key-active-bg: #ced4da;
+            --black-key-bg: #343a40;
+            --black-key-text: #f8f9fa;
+            --black-key-active-bg: #5a6268;
+            --border-color: #1c2833;
+            --hr-color: #4a6fa5;
+        }
+        body.theme-ocean {
+             --bg-color: #0c2438; --header-bg: #071824; --piano-bg: #1e425e; --text-color: #e0f7fa;
+             --accent-color: #00bcd4; --accent-hover: #0097a7; --hr-color: #26c6da;
+        }
+        body.theme-forest {
+            --bg-color: #2d382d; --header-bg: #1c251c; --piano-bg: #415141; --text-color: #e8f5e9;
+            --accent-color: #81c784; --accent-hover: #66bb6a; --success-color: #a5d6a7;
+            --white-key-bg: #f1f8e9; --hr-color: #558b2f;
+        }
+        body.theme-retro {
+            --bg-color: #000; --header-bg: #0a0a0a; --piano-bg: #111; --text-color: #0f0;
+            --text-muted: #0c0; --accent-color: #0f0; --accent-hover: #3f3; --success-color: #0f0;
+            --border-color: #030; --white-key-bg: #1a1a1a; --white-key-text: #0f0;
+            --black-key-bg: #0a0a0a; --black-key-text: #0f0; --hr-color: #0f0;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        /* --- General Layout --- */
+        body{display:flex;flex-direction:column;align-items:center;min-height:100vh;background-color:var(--bg-color);margin:0;padding:20px 0;font-family:sans-serif;overflow-y:auto;overflow-x:hidden;-webkit-tap-highlight-color:transparent; transition: background-color 0.3s;}
+        .keyboard-section{width:100%;display:flex;flex-direction:column;align-items:center;margin-bottom:30px}
+        .header-controls{display:flex;flex-direction:column;align-items:center;margin-bottom:15px;color:var(--text-color);width:90%;max-width:1100px}
+        .header-controls h2{margin-top:0;margin-bottom:10px;font-size:1.5em}
+        .controls-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;width:100%;align-items:center}
+        .control-group{display:flex;align-items:center;justify-content:center;padding:5px;flex-wrap:nowrap}
+        .octave-controls button{padding:7px 10px;margin:0 4px;background-color:var(--accent-color);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:.85em}
+        .octave-controls button:hover{background-color:var(--accent-hover)}
+        .control-group span{font-size:.85em;margin:0 5px;white-space:nowrap}
+        .slider-input{width:80px;margin-left:4px}
+        .control-select{padding:6px 8px;border-radius:4px;border:1px solid #7f8c8d;background-color:var(--white-key-bg);color:var(--white-key-text);font-size:.85em;margin-left:4px;min-width:140px}
+        .piano-container{display:flex;justify-content:flex-start;width:95%;max-width:100%;padding:10px;background-color:var(--piano-bg);border-radius:10px;box-shadow:0 5px 15px var(--piano-shadow);overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+        .piano{display:flex;position:relative;width:fit-content;height:180px}
+        .key{border:1px solid var(--border-color);box-sizing:border-box;cursor:pointer;-webkit-user-select:none;-moz-user-select:none;user-select:none;transition:background-color .05s ease,transform .05s ease;display:flex;flex-direction:column;justify-content:space-around;align-items:center;padding:5px 2px;text-align:center;margin-right:1px;width:30px;min-width:18px;flex-shrink:0}
+        .key.is-white{background-color:var(--white-key-bg);color:var(--white-key-text)}
+        .key.is-black{background-color:var(--black-key-bg);color:var(--black-key-text);border-color:var(--black-key-bg)}
+        .key:last-child{margin-right:0}.key-step-label{font-size:.8em;font-weight:700;display:block}.key-interval-label{font-size:.55em;line-height:1;display:block;margin:1px 0}.key-division-info{font-size:.5em;line-height:1;display:block}.key.active,.key:active{filter:brightness(.85)}
+        .key.is-white.active,.key.is-white:active{background-color:var(--white-key-active-bg);color:#000}
+        .key.is-black.active,.key.is-black:active{background-color:var(--black-key-active-bg);color:#fff}
+        .key.active{transform:scaleY(.97) translateY(2px);box-shadow:inset 0 0 4px rgba(0,0,0,.2)}
+        hr {width:80%; margin: 20px auto; border: 0; border-top: 1px solid var(--hr-color);}
+        
+        /* --- New Global & FX Controls CSS --- */
+        .global-controls-container { width: 90%; max-width: 1100px; margin-bottom: 25px; color: var(--text-color); }
+        .global-controls-container details { background-color: var(--header-bg); border-radius: 8px; padding: 10px 20px; }
+        .global-controls-container summary { font-size: 1.2em; font-weight: bold; cursor: pointer; padding: 5px 0; }
+        .global-controls-content { padding-top: 20px; }
+        .global-section { margin-bottom: 20px; border-bottom: 1px solid var(--piano-bg); padding-bottom: 15px; }
+        .global-section h3 { margin-top: 0; font-size: 1.1em; }
+        .global-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; align-items: center; }
+        .midi-io-group, .skin-group { display: flex; flex-direction: column; gap: 8px; }
+        .midi-io-group label, .skin-group label { font-size: 0.9em; font-weight: bold; }
+        .global-controls-content button { padding: 8px 12px; background-color: var(--action-color); color: white; border: none; border-radius: 5px; cursor: pointer; font-size: .9em; }
+        .global-controls-content button:hover { background-color: var(--action-hover); }
+        .global-controls-content button.enabled { background-color: var(--success-color); }
+        .global-controls-content button.enabled:hover { background-color: var(--success-hover); }
+
+        .fx-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 10px; }
+        .fx-module { background-color: var(--piano-bg); padding: 10px; border-radius: 6px; }
+        .fx-module-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .fx-module-header label { font-weight: bold; font-size: 0.9em; }
+        .fx-param { display: flex; justify-content: space-between; align-items: center; font-size: 0.8em; margin-bottom: 4px; }
+        .fx-param input[type=range] { width: 60%; }
+        
+        .midi-status-display { font-size: 0.8em; color: var(--text-muted); font-style: italic; }
+        .computer-keyboard-info { text-align: center; color: var(--text-muted); font-size: 0.9em; margin-bottom: 20px; max-width: 90%; }
     </style>
 </head>
-<body>
+<body class="theme-dark">
+
+    <div class="global-controls-container">
+        <details open>
+            <summary>Global Controls (MIDI, Effects, Skins)</summary>
+            <div class="global-controls-content">
+                <!-- MIDI and Skins Section -->
+                <div class="global-section">
+                    <h3>MIDI &amp; Appearance</h3>
+                    <div class="global-grid">
+                        <button id="midi-connect-btn">Connect MIDI Devices</button>
+                        <div class="midi-io-group">
+                            <label for="midi-in-select-1">Piano 1 MIDI Input:</label>
+                            <select id="midi-in-select-1" class="control-select" disabled><option>N/A</option></select>
+                        </div>
+                        <div class="midi-io-group">
+                            <label for="midi-in-select-2">Piano 2 MIDI Input:</label>
+                            <select id="midi-in-select-2" class="control-select" disabled><option>N/A</option></select>
+                        </div>
+                        <div class="midi-io-group">
+                            <label for="midi-out-select">MIDI Output Device:</label>
+                            <select id="midi-out-select" class="control-select" disabled><option>N/A</option></select>
+                        </div>
+                        <div class="skin-group">
+                            <label for="skin-select">Skin:</label>
+                            <select id="skin-select" class="control-select">
+                                <option value="theme-dark" selected>Studio Dark</option>
+                                <option value="theme-ocean">Ocean</option>
+                                <option value="theme-forest">Forest</option>
+                                <option value="theme-retro">Retro Terminal</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <!-- Effects Section -->
+                <div class="global-section">
+                    <h3>Piano 1 Effects</h3>
+                    <div id="fx-panel-1" class="fx-panel"></div>
+                </div>
+                <div class="global-section">
+                    <h3>Piano 2 Effects</h3>
+                    <div id="fx-panel-2" class="fx-panel"></div>
+                </div>
+            </div>
+        </details>
+    </div>
+
+    <div class="computer-keyboard-info">
+        Play Piano 1 with your computer keyboard (rows `1-9`, `Q-P`, `A-L`, `Z-M`).
+    </div>
 
     <div class="keyboard-section">
         <div class="header-controls">
-            <h2>Piano 1 (<span class="tuning-display" id="tuning-display-1">12-EDO</span>)</h2>
+            <h2>Piano 1 (<span class="tuning-display" id="tuning-display-1">12-EDO</span>) <span class="midi-status-display" id="midi-input-device-1"></span></h2>
             <div class="controls-grid">
                 <div class="control-group">
                     <span>Tuning:</span>
@@ -54,14 +188,17 @@
                 <div class="control-group">
                     <span>Wave:</span>
                     <select class="control-select wave-select" id="wave-type-1">
-                        <option value="sine" selected>Sine</option>
+                        <option value="pluck_piano" selected>Pluck Piano</option>
+                        <option value="acoustic_piano">Acoustic Piano</option>
+                        <option value="synth_pad">Synth Pad</option>
+                        <option value="pianish">Pianish</option>
+                        <option value="bright_pluck">Bright Pluck</option>
+                        <option value="organ">Organ</option>
+                        <option value="synth_saw">Synth Saw</option>
+                        <option value="sine">Sine</option>
                         <option value="square">Square</option>
                         <option value="sawtooth">Sawtooth</option>
                         <option value="triangle">Triangle</option>
-                        <option value="organ">Organ</option>
-                        <option value="bright_pluck">Bright Pluck</option>
-                        <option value="pianish">Pianish</option>
-                        <option value="synth_saw">Synth Saw</option>
                     </select>
                 </div>
             </div>
@@ -71,11 +208,11 @@
         </div>
     </div>
 
-    <hr style="width:80%; margin: 20px auto; border-color: #4a6fa5;">
+    <hr>
 
     <div class="keyboard-section">
         <div class="header-controls">
-            <h2>Piano 2 (<span class="tuning-display" id="tuning-display-2">12-EDO</span>)</h2>
+            <h2>Piano 2 (<span class="tuning-display" id="tuning-display-2">12-EDO</span>) <span class="midi-status-display" id="midi-input-device-2"></span></h2>
             <div class="controls-grid">
                 <div class="control-group">
                     <span>Tuning:</span>
@@ -116,14 +253,17 @@
                  <div class="control-group">
                     <span>Wave:</span>
                     <select class="control-select wave-select" id="wave-type-2">
-                        <option value="sine" selected>Sine</option>
+                        <option value="pluck_piano" selected>Pluck Piano</option>
+                        <option value="acoustic_piano">Acoustic Piano</option>
+                        <option value="synth_pad">Synth Pad</option>
+                        <option value="pianish">Pianish</option>
+                        <option value="bright_pluck">Bright Pluck</option>
+                        <option value="organ">Organ</option>
+                        <option value="synth_saw">Synth Saw</option>
+                        <option value="sine">Sine</option>
                         <option value="square">Square</option>
                         <option value="sawtooth">Sawtooth</option>
                         <option value="triangle">Triangle</option>
-                        <option value="organ">Organ</option>
-                        <option value="bright_pluck">Bright Pluck</option>
-                        <option value="pianish">Pianish</option>
-                        <option value="synth_saw">Synth Saw</option>
                     </select>
                 </div>
             </div>
@@ -135,98 +275,72 @@
 
     <script>
         const BASE_C4_FREQ = 261.63;
+        // Tunings data remains the same
+        const allTuningsData = { "5": { name: "5-EDO", type: "edo", edo_divisions: 5, labels: [], whiteKeySteps: [0,1,2,3,4]}, "7": { name: "7-EDO", type: "edo", edo_divisions: 7, labels: [], whiteKeySteps: [0,1,2,3,4,5,6] }, "9": { name: "9-EDO", type: "edo", edo_divisions: 9, labels: [], whiteKeySteps: [0,2,3,5,7,8]}, "12": { name: "12-EDO", type: "edo", edo_divisions: 12, labels: ["C","C♯","D","D♯","E","F","F♯","G","G♯","A","A♯","B"], whiteKeySteps: [0,2,4,5,7,9,11] }, "15": { name: "15-EDO", type: "edo", edo_divisions: 15, labels: [], whiteKeySteps: [0,2,4,5,7,9,11,12,14] }, "17": { name: "17-EDO", type: "edo", edo_divisions: 17, labels: [], whiteKeySteps: [0,2,3,5,7,8,10,12,13,15] }, "19": { name: "19-EDO", type: "edo", edo_divisions: 19, labels: ["C","C♯","Db","D","D♯","Eb","E","F♭","F","F♯","Gb","G","G♯","Ab","A","A♯","Bb","B","Cb"], whiteKeySteps: [0,2,3,5,6,8,10,11,13,14,16,17] }, "22": { name: "22-EDO", type: "edo", edo_divisions: 22, labels: [], whiteKeySteps: [0,3,4,7,11,14,15,18] }, "24": { name: "24-EDO (Quarter)", type: "edo", edo_divisions: 24, labels: ["C","C¼♯","C♯","D¼♭","D","D¼♯","D♯","E¼♭","E","E¼♯","F","F¼♯","F♯","G¼♭","G","G¼♯","G♯","A¼♭","A","A¼♯","A♯","B¼♭","B","B¼♯"], whiteKeySteps: [0,4,8,10,14,18,22] }, "31": { name: "31-EDO", type: "edo", edo_divisions: 31, labels: ["C","D𝄫","C♯","D♭","C𝄪","D","E𝄫","D♯","E♭","D𝄪","E","F♭","E♯","F","G𝄫","F♯","G♭","F𝄪","G","A𝄫","G♯","A♭","G𝄪","A","B𝄫","A♯","B♭","A𝄪","B","C♭","B♯"], whiteKeySteps: [0,5,10,13,18,23,28] }, "41": { name: "41-EDO", type: "edo", edo_divisions: 41, labels: [], whiteKeySteps: [0,7,14,17,24,31,38] }, "53": { name: "53-EDO", type: "edo", edo_divisions: 53, labels: [], whiteKeySteps: [0,9,18,22,31,40,49] }, "ji_5_limit_chromatic": { name: "5-Limit JI (12n)", type: "ratios", values: [1/1,16/15,9/8,6/5,5/4,4/3,45/32,3/2,8/5,5/3,9/5,15/8], ratioStrings: ["1/1","16/15","9/8","6/5","5/4","4/3","45/32","3/2","8/5","5/3","9/5","15/8"], labels: ["C","D♭","D","E♭","E","F","F♯","G","A♭","A","B♭","B"], whiteKeySteps: [0,2,4,5,7,9,11]}, "ji_pythagorean_chromatic": { name: "Pythagorean (12n)", type: "ratios", values: [1/1,256/243,9/8,32/27,81/64,4/3,729/512,3/2,128/81,27/16,16/9,243/128], ratioStrings: ["1/1","256/243","9/8","32/27","81/64","4/3","729/512","3/2","128/81","27/16","16/9","243/128"], labels: ["C","D♭ₚ","D","E♭ₚ","Eₚ","F","F♯ₚ","G","A♭ₚ","Aₚ","B♭ₚ","Bₚ"], whiteKeySteps: [0,2,4,5,7,9,11]}, "ji_7_limit_chromatic": { name: "7-Limit JI (14n)", type: "ratios", values: [1/1,21/20,9/8,8/7,7/6,5/4,9/7,21/16,7/5,10/7,3/2,27/16,12/7,7/4], ratioStrings: ["1/1","21/20","9/8","8/7","7/6","5/4","9/7","21/16","7/5","10/7","3/2","27/16","12/7","7/4"], labels: ["Do","C₇♯","Re","Re♭₇","Mi♭₇","Mi","Fa♭₇","Fa₇","Fa♯₇","Sol♭₇","Sol","Laₚ","La♯ₚ","Ti♭₇"], whiteKeySteps: [0,2,5,7,10,11,13]}, "ji_11_limit_example": { name: "11-Limit JI (11n Ex.)", type: "ratios", values: [1/1,9/8,11/9,5/4,14/11,4/3,11/8,16/11,3/2,5/3,11/6], ratioStrings: ["1/1","9/8","11/9","5/4","14/11","4/3","11/8","16/11","3/2","5/3","11/6"], labels: ["Do","Re","Me₁₁","Mi","Fa'₁₁","Fa","Fi₁₁","Sol♭₁₁","Sol","La","Li₁₁"], whiteKeySteps: [0,1,3,5,8,9]}, "ji_13_limit_example": { name: "13-Limit JI (10n Ex.)", type: "ratios", values: [1/1,9/8,16/13,5/4,13/10,4/3,3/2,13/8,5/3,15/8], ratioStrings: ["1/1","9/8","16/13","5/4","13/10","4/3","3/2","13/8","5/3","15/8"], labels: ["Do","Re","m3₁₃","Mi","M3₁₃","Fa","Sol","M6₁₃","La","Ti"], whiteKeySteps: [0,1,3,5,6,8,9]}, "tm_meantone_qc": { name: "Meantone (¼c)", type: "cents", values: [0,76,193.2,310.3,386.3,503.4,579.5,696.6,813.7,889.7,1006.8,1082.9], ratioStrings: ["1/1","~25/24","~√(5)/2","~6/5","5/4","~4*√(1/5)","~√2","5^(1/4)","~8/5","~5^(3/4)/2","~16/9","~15/8"], labels: ["C","C♯","D","E♭","E","F","F♯","G","G♯","A","B♭","B"], whiteKeySteps: [0,2,4,5,7,9,11]} };
 
-        const allTuningsData = {
-            "5": { name: "5-EDO", type: "edo", edo_divisions: 5, labels: [], whiteKeySteps: [0,1,2,3,4]},
-            "7": { name: "7-EDO", type: "edo", edo_divisions: 7, labels: [], whiteKeySteps: [0,1,2,3,4,5,6] },
-            "9": { name: "9-EDO", type: "edo", edo_divisions: 9, labels: [], whiteKeySteps: [0,2,3,5,7,8]},
-            "12": { name: "12-EDO", type: "edo", edo_divisions: 12, labels: ["C","C♯","D","D♯","E","F","F♯","G","G♯","A","A♯","B"], whiteKeySteps: [0,2,4,5,7,9,11] },
-            "15": { name: "15-EDO", type: "edo", edo_divisions: 15, labels: [], whiteKeySteps: [0,2,4,5,7,9,11,12,14] },
-            "17": { name: "17-EDO", type: "edo", edo_divisions: 17, labels: [], whiteKeySteps: [0,2,3,5,7,8,10,12,13,15] },
-            "19": { name: "19-EDO", type: "edo", edo_divisions: 19, labels: ["C","C♯","Db","D","D♯","Eb","E","F♭","F","F♯","Gb","G","G♯","Ab","A","A♯","Bb","B","Cb"], whiteKeySteps: [0,2,3,5,6,8,10,11,13,14,16,17] },
-            "22": { name: "22-EDO", type: "edo", edo_divisions: 22, labels: [], whiteKeySteps: [0,3,4,7,11,14,15,18] },
-            "24": { name: "24-EDO (Quarter)", type: "edo", edo_divisions: 24, labels: ["C","C¼♯","C♯","D¼♭","D","D¼♯","D♯","E¼♭","E","E¼♯","F","F¼♯","F♯","G¼♭","G","G¼♯","G♯","A¼♭","A","A¼♯","A♯","B¼♭","B","B¼♯"], whiteKeySteps: [0,4,8,10,14,18,22] },
-            "31": { name: "31-EDO", type: "edo", edo_divisions: 31, labels: ["C","D𝄫","C♯","D♭","C𝄪","D","E𝄫","D♯","E♭","D𝄪","E","F♭","E♯","F","G𝄫","F♯","G♭","F𝄪","G","A𝄫","G♯","A♭","G𝄪","A","B𝄫","A♯","B♭","A𝄪","B","C♭","B♯"], whiteKeySteps: [0,5,10,13,18,23,28] },
-            "41": { name: "41-EDO", type: "edo", edo_divisions: 41, labels: [], whiteKeySteps: [0,7,14,17,24,31,38] },
-            "53": { name: "53-EDO", type: "edo", edo_divisions: 53, labels: [], whiteKeySteps: [0,9,18,22,31,40,49] },
-            "ji_5_limit_chromatic": { name: "5-Limit JI (12n)", type: "ratios", values: [1/1,16/15,9/8,6/5,5/4,4/3,45/32,3/2,8/5,5/3,9/5,15/8], ratioStrings: ["1/1","16/15","9/8","6/5","5/4","4/3","45/32","3/2","8/5","5/3","9/5","15/8"], labels: ["C","D♭","D","E♭","E","F","F♯","G","A♭","A","B♭","B"], whiteKeySteps: [0,2,4,5,7,9,11]},
-            "ji_pythagorean_chromatic": { name: "Pythagorean (12n)", type: "ratios", values: [1/1,256/243,9/8,32/27,81/64,4/3,729/512,3/2,128/81,27/16,16/9,243/128], ratioStrings: ["1/1","256/243","9/8","32/27","81/64","4/3","729/512","3/2","128/81","27/16","16/9","243/128"], labels: ["C","D♭ₚ","D","E♭ₚ","Eₚ","F","F♯ₚ","G","A♭ₚ","Aₚ","B♭ₚ","Bₚ"], whiteKeySteps: [0,2,4,5,7,9,11]},
-            "ji_7_limit_chromatic": { name: "7-Limit JI (14n)", type: "ratios", values: [1/1,21/20,9/8,8/7,7/6,5/4,9/7,21/16,7/5,10/7,3/2,27/16,12/7,7/4], ratioStrings: ["1/1","21/20","9/8","8/7","7/6","5/4","9/7","21/16","7/5","10/7","3/2","27/16","12/7","7/4"], labels: ["Do","C₇♯","Re","Re♭₇","Mi♭₇","Mi","Fa♭₇","Fa₇","Fa♯₇","Sol♭₇","Sol","Laₚ","La♯ₚ","Ti♭₇"], whiteKeySteps: [0,2,5,7,10,11,13]},
-            "ji_11_limit_example": { name: "11-Limit JI (11n Ex.)", type: "ratios", values: [1/1,9/8,11/9,5/4,14/11,4/3,11/8,16/11,3/2,5/3,11/6], ratioStrings: ["1/1","9/8","11/9","5/4","14/11","4/3","11/8","16/11","3/2","5/3","11/6"], labels: ["Do","Re","Me₁₁","Mi","Fa'₁₁","Fa","Fi₁₁","Sol♭₁₁","Sol","La","Li₁₁"], whiteKeySteps: [0,1,3,5,8,9]},
-            "ji_13_limit_example": { name: "13-Limit JI (10n Ex.)", type: "ratios", values: [1/1,9/8,16/13,5/4,13/10,4/3,3/2,13/8,5/3,15/8], ratioStrings: ["1/1","9/8","16/13","5/4","13/10","4/3","3/2","13/8","5/3","15/8"], labels: ["Do","Re","m3₁₃","Mi","M3₁₃","Fa","Sol","M6₁₃","La","Ti"], whiteKeySteps: [0,1,3,5,6,8,9]},
-            "tm_meantone_qc": { name: "Meantone (¼c)", type: "cents", values: [0,76,193.2,310.3,386.3,503.4,579.5,696.6,813.7,889.7,1006.8,1082.9], ratioStrings: ["1/1","~25/24","~√(5)/2","~6/5","5/4","~4*√(1/5)","~√2","5^(1/4)","~8/5","~5^(3/4)/2","~16/9","~15/8"], labels: ["C","C♯","D","E♭","E","F","F♯","G","G♯","A","B♭","B"], whiteKeySteps: [0,2,4,5,7,9,11]}
-        };
-
-        for (const key in allTuningsData) { /* ... auto-fill EDO labels ... */ }
+        // --- Data Population (no changes here) ---
         for (const key in allTuningsData) {
             const tuning = allTuningsData[key];
-            if (tuning.type === "edo" && tuning.labels.length === 0) {
-                for (let i = 0; i < tuning.edo_divisions; i++) {
-                    tuning.labels.push(`S${i}`);
-                }
-            } else if (tuning.type === "edo" && tuning.labels.length !== tuning.edo_divisions) {
-                const currentLabels = tuning.labels;
-                const divisions = tuning.edo_divisions;
-                if (currentLabels.length < divisions) {
-                    for (let i = currentLabels.length; i < divisions; i++) {
-                        currentLabels.push(`S${i}`);
-                    }
-                }
-                tuning.labels = currentLabels.slice(0, divisions);
-            }
-            if (tuning.type === "ratios" && (!tuning.ratioStrings || tuning.ratioStrings.length !== tuning.values.length)) {
-                tuning.ratioStrings = tuning.values.map(v => `~${v.toFixed(3)}`);
-            }
-            if (tuning.type === "cents" && (!tuning.ratioStrings || tuning.ratioStrings.length !== tuning.values.length)) {
-                 tuning.ratioStrings = tuning.values.map(() => ``);
-            }
+            if (tuning.type === "edo" && tuning.labels.length === 0) { for (let i = 0; i < tuning.edo_divisions; i++) { tuning.labels.push(`S${i}`); } }
+            else if (tuning.type === "edo" && tuning.labels.length !== tuning.edo_divisions) { const cl = tuning.labels; const d = tuning.edo_divisions; if (cl.length < d) { for (let i = cl.length; i < d; i++) { cl.push(`S${i}`); } } tuning.labels = cl.slice(0, d); }
+            if (tuning.type === "ratios" && (!tuning.ratioStrings || tuning.ratioStrings.length !== tuning.values.length)) { tuning.ratioStrings = tuning.values.map(v => `~${v.toFixed(3)}`); }
+            if (tuning.type === "cents" && (!tuning.ratioStrings || tuning.ratioStrings.length !== tuning.values.length)) { tuning.ratioStrings = tuning.values.map(() => ``); }
         }
 
+        // --- Global State ---
         let audioContext;
         const pianoInstances = [];
         let customWaves = {};
+        let midiAccess = null;
+        let midiOutDevice = null;
+        let midiInDevice1 = null;
+        let midiInDevice2 = null;
+        const computerKeysPressed = new Set();
+        const computerKeyMap = [ '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', "'", 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/' ];
 
+        // --- Audio Initialization ---
         function initAudioContext() {
-            if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                if (Object.keys(customWaves).length === 0) {
-                    let organReal = new Float32Array([0, 0.8, 0.5, 0.6, 0.3]);
-                    let organImag = new Float32Array(organReal.length).fill(0);
-                    customWaves.organ = audioContext.createPeriodicWave(organReal, organImag, {disableNormalization: false});
+            if (audioContext) return;
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            if (Object.keys(customWaves).length > 0) return;
 
-                    let pluckReal = new Float32Array([0, 0.7, 0.4, 0.2, 0.3, 0.1, 0.15, 0.05, 0.1]);
-                    let pluckImag = new Float32Array(pluckReal.length).fill(0);
-                    customWaves.bright_pluck = audioContext.createPeriodicWave(pluckReal, pluckImag, {disableNormalization: false});
+            const createWave = (real, imag = null) => {
+                const r = new Float32Array(real);
+                const i = imag ? new Float32Array(imag) : new Float32Array(r.length).fill(0);
+                return audioContext.createPeriodicWave(r, i, { disableNormalization: true });
+            };
+            
+            customWaves.organ = createWave([0, 0.8, 0.5, 0.6, 0.3]);
+            customWaves.bright_pluck = createWave([0, 0.7, 0.4, 0.2, 0.3, 0.1, 0.15, 0.05, 0.1]);
+            customWaves.pianish = createWave([0, 1, 0.8, 0.6, 0.5, 0.4, 0.3, 0.2, 0.15, 0.1, 0.05]);
+            
+            let synthSawImag = [0]; for (let i = 1; i <= 16; i++) { synthSawImag.push(1 / i); }
+            customWaves.synth_saw = createWave(new Array(synthSawImag.length).fill(0), synthSawImag);
 
-                    // "Pianish" sound: Many harmonics, amplitudes generally decreasing.
-                    // More complex decay would require changing the wave over time or filtering.
-                    const pianishHarmonics = 10;
-                    let pianishReal = new Float32Array(pianishHarmonics + 1); // +1 for DC offset
-                    let pianishImag = new Float32Array(pianishHarmonics + 1);
-                    pianishReal[0] = 0; pianishImag[0] = 0; // DC offset
-                    for (let i = 1; i <= pianishHarmonics; i++) {
-                        pianishReal[i] = (Math.random() * 0.5 + 0.5) / (i * 1.2); // Randomize amplitude slightly, decreasing
-                        pianishImag[i] = (Math.random() * 0.2 - 0.1) / i;      // Slight phase randomness
-                    }
-                    customWaves.pianish = audioContext.createPeriodicWave(pianishReal, pianishImag, {disableNormalization: true}); // Normalization might make it too consistent
+            // "Acoustic Piano" sound with many weighted harmonics
+            const pianoHarmonics = [0, 0.9, 0.45, 0.5, 0.15, 0.25, 0.1, 0.12, 0.05, 0.08, 0.06, 0.07, 0.02, 0.04, 0.01, 0.01, 0.005, 0.005, 0.002, 0.002, 0.001];
+            customWaves.acoustic_piano = createWave(pianoHarmonics);
 
+            // NEW: "Pluck Piano" - bright with a fast decay character.
+            const pluckPianoHarmonics = [0, 1, 0.7, 0.5, 0.2, 0.2, 0.1, 0.05];
+            customWaves.pluck_piano = createWave(pluckPianoHarmonics);
+        }
 
-                    // "Synth Saw" (Custom Sawtooth using PeriodicWave for potential fine-tuning)
-                    // A perfect sawtooth has imag (sine) components: b_n = (2A/π) * ((-1)^(n+1))/n
-                    // For simplicity, we'll use a common approximation with many harmonics.
-                    const synthSawHarmonics = 16; // More harmonics for a brighter saw
-                    let synthSawReal = new Float32Array(synthSawHarmonics + 1).fill(0);
-                    let synthSawImag = new Float32Array(synthSawHarmonics + 1);
-                    synthSawImag[0] = 0;
-                    for (let i = 1; i <= synthSawHarmonics; i++) {
-                        synthSawImag[i] = 1 / i; // Amplitude proportional to 1/n
-                    }
-                    customWaves.synth_saw = audioContext.createPeriodicWave(synthSawReal, synthSawImag, {disableNormalization: false});
+        function createImpulseResponse(duration = 2.5, decay = 2.0) {
+            const sampleRate = audioContext.sampleRate;
+            const length = sampleRate * duration;
+            const impulse = audioContext.createBuffer(2, length, sampleRate);
+            for (let channel = 0; channel < 2; channel++) {
+                const channelData = impulse.getChannelData(channel);
+                for (let i = 0; i < length; i++) {
+                    channelData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
                 }
             }
+            return impulse;
         }
 
         function createPianoInstance(config) {
+            // --- UI Elements and State (no changes) ---
             const pianoElement = document.getElementById(config.pianoId);
             const tuningDisplayElement = document.getElementById(config.tuningDisplayId);
             const tuningSelectElement = document.getElementById(config.tuningSelectId);
@@ -243,274 +357,289 @@
             let currentWaveType = waveTypeSelectElement.value;
             const activeOscillators = {};
 
-            const masterGainNode = audioContext ? audioContext.createGain() : null;
-            if (masterGainNode) {
-                masterGainNode.gain.setValueAtTime(currentVolume, audioContext.currentTime);
-                masterGainNode.connect(audioContext.destination);
-            }
+            // --- Audio Graph Setup (no changes) ---
+            const masterGainNode = audioContext.createGain();
+            masterGainNode.gain.setValueAtTime(currentVolume, audioContext.currentTime);
+            masterGainNode.connect(audioContext.destination);
+            const fxChainInput = audioContext.createGain();
+            const fxChainOutput = audioContext.createGain();
+            fxChainOutput.connect(masterGainNode);
+            const effects = {
+                reverb: { node: audioContext.createConvolver(), wet: audioContext.createGain(), enabled: false },
+                delay: { node: audioContext.createDelay(5.0), wet: audioContext.createGain(), enabled: false, feedback: audioContext.createGain() },
+                chorus: { node: audioContext.createDelay(1.0), wet: audioContext.createGain(), enabled: false, lfo: audioContext.createOscillator(), lfoGain: audioContext.createGain() },
+                phaser: { node: audioContext.createBiquadFilter(), wet: audioContext.createGain(), enabled: false, lfo: audioContext.createOscillator(), lfoGain: audioContext.createGain() },
+                flanger: { node: audioContext.createDelay(1.0), wet: audioContext.createGain(), enabled: false, lfo: audioContext.createOscillator(), lfoGain: audioContext.createGain(), feedback: audioContext.createGain() }
+            };
+            (function setupFxChain() {
+                effects.reverb.node.buffer = createImpulseResponse();
+                effects.reverb.wet.gain.value = 0.3;
+                effects.delay.node.delayTime.value = 0.33;
+                effects.delay.feedback.gain.value = 0.4;
+                effects.delay.wet.gain.value = 0.35;
+                effects.delay.node.connect(effects.delay.feedback);
+                effects.delay.feedback.connect(effects.delay.node);
+                effects.chorus.lfo.type = 'sine';
+                effects.chorus.lfo.frequency.value = 0.8;
+                effects.chorus.lfoGain.gain.value = 0.004;
+                effects.chorus.node.delayTime.value = 0.025;
+                effects.chorus.wet.gain.value = 0.5;
+                effects.chorus.lfo.connect(effects.chorus.lfoGain);
+                effects.chorus.lfoGain.connect(effects.chorus.node.delayTime);
+                effects.chorus.lfo.start();
+                effects.phaser.node.type = 'allpass';
+                effects.phaser.node.Q.value = 5;
+                effects.phaser.lfo.type = 'triangle';
+                effects.phaser.lfo.frequency.value = 0.5;
+                effects.phaser.lfoGain.gain.value = 800;
+                effects.phaser.node.frequency.value = 1000;
+                effects.phaser.wet.gain.value = 0.6;
+                effects.phaser.lfo.connect(effects.phaser.lfoGain);
+                effects.phaser.lfoGain.connect(effects.phaser.node.frequency);
+                effects.phaser.lfo.start();
+                effects.flanger.lfo.type = 'triangle';
+                effects.flanger.lfo.frequency.value = 0.1;
+                effects.flanger.lfoGain.gain.value = 0.003;
+                effects.flanger.node.delayTime.value = 0.005;
+                effects.flanger.feedback.gain.value = 0.5;
+                effects.flanger.wet.gain.value = 0.4;
+                effects.flanger.lfo.connect(effects.flanger.lfoGain);
+                effects.flanger.lfoGain.connect(effects.flanger.node.delayTime);
+                effects.flanger.lfo.start();
+                effects.flanger.node.connect(effects.flanger.feedback);
+                effects.flanger.feedback.connect(effects.flanger.node);
+                 fxChainInput.connect(effects.chorus.node);
+                 effects.chorus.node.connect(effects.phaser.node);
+                 effects.phaser.node.connect(effects.flanger.node);
+                 effects.flanger.node.connect(effects.delay.node);
+                 effects.delay.node.connect(effects.reverb.node);
+                 effects.reverb.node.connect(fxChainOutput);
+                 const connectWet = (fx) => { fxChainInput.connect(fx.node); fx.node.connect(fx.wet); fx.wet.connect(fxChainOutput); };
+                 connectWet(effects.chorus); connectWet(effects.phaser); connectWet(effects.flanger); connectWet(effects.delay); connectWet(effects.reverb);
+            })();
 
-            // --- Helper Functions ---
+            // --- Control and Key Functions (no changes) ---
             function getCurrentTuningObject() { return allTuningsData[currentTuningSystem] || allTuningsData["12"]; }
             function updateTuningDisplayTitle() { tuningDisplayElement.textContent = getCurrentTuningObject().name; }
             function updateOctaveDisplay() { octaveDisplayElement.textContent = currentOctaveOffset; }
-            function applyZoom() {
-                const keyWidth = zoomSliderElement.value + 'px';
-                pianoElement.querySelectorAll('.key').forEach(key => key.style.width = keyWidth);
-            }
-            function updateVolume() {
-                currentVolume = parseFloat(volumeSliderElement.value);
-                if (masterGainNode && audioContext) {
-                    masterGainNode.gain.setValueAtTime(currentVolume, audioContext.currentTime);
-                }
-            }
+            function applyZoom() { pianoElement.querySelectorAll('.key').forEach(key => key.style.width = zoomSliderElement.value + 'px'); }
+            function updateVolume() { if (masterGainNode) masterGainNode.gain.setTargetAtTime(parseFloat(volumeSliderElement.value), audioContext.currentTime, 0.01); }
             function updateWaveType() { currentWaveType = waveTypeSelectElement.value; }
-            // --- End of Helper Functions ---
-
-
-            function updateTuningSystem() {
-                stopAllNotesForThisInstance();
-                currentTuningSystem = tuningSelectElement.value;
-                updateTuningDisplayTitle();
-                generateKeys();
-            }
-
-            function generateKeys() { /* ... same ... */ }
+            function changeOctave(direction) { currentOctaveOffset += direction; updateOctaveDisplay(); }
+            function changeTuning(direction) { let n = tuningSelectElement.selectedIndex + direction; if (n < 0) n = tuningSelectElement.options.length - 1; if (n >= tuningSelectElement.options.length) n = 0; tuningSelectElement.selectedIndex = n; tuningSelectElement.dispatchEvent(new Event('change')); }
+            function changeWave(direction) { let n = waveTypeSelectElement.selectedIndex + direction; if (n < 0) n = waveTypeSelectElement.options.length - 1; if (n >= waveTypeSelectElement.options.length) n = 0; waveTypeSelectElement.selectedIndex = n; waveTypeSelectElement.dispatchEvent(new Event('change')); }
+            function activateKey(step) { const key = pianoElement.querySelector(`[data-step="${step}"]`); if (key) key.classList.add('active'); }
+            function deactivateKey(step) { const key = pianoElement.querySelector(`[data-step="${step}"]`); if (key) key.classList.remove('active'); }
+            function updateTuningSystem() { stopAllNotesForThisInstance(); currentTuningSystem = tuningSelectElement.value; updateTuningDisplayTitle(); generateKeys(); }
             function generateKeys() {
                 pianoElement.innerHTML = '';
-                pianoElement.querySelectorAll('.key.active').forEach(k => k.classList.remove('active'));
-
-                const tuningObject = getCurrentTuningObject();
-                const numKeys = tuningObject.labels.length;
-                const currentIntervalLabels = tuningObject.labels;
-                const whiteKeySteps = tuningObject.whiteKeySteps || null;
-
-                for (let i = 0; i < numKeys; i++) {
-                    const key = document.createElement('div');
-                    key.classList.add('key');
-                    key.dataset.step = i;
-
-                    if (whiteKeySteps && whiteKeySteps.length > 0) {
-                        if (whiteKeySteps.includes(i)) { key.classList.add('is-white'); }
-                        else { key.classList.add('is-black'); }
-                    } else { 
-                        key.classList.add('is-white'); 
-                    }
-
-
-                    const stepLabel = document.createElement('span');
-                    stepLabel.classList.add('key-step-label');
-                    stepLabel.textContent = i;
-
-                    const intervalLabel = document.createElement('span');
-                    intervalLabel.classList.add('key-interval-label');
-                    intervalLabel.textContent = currentIntervalLabels[i] || `S${i}`;
-
-                    const divisionInfoLabel = document.createElement('span');
-                    divisionInfoLabel.classList.add('key-division-info');
-                    let divisionText = "";
-
-                    if (tuningObject.type === "edo") {
-                        const cents = (i * 1200) / tuningObject.edo_divisions;
-                        divisionText = `${cents.toFixed(1)}¢`;
-                    } else if (tuningObject.type === "ratios") {
-                        const ratioStr = tuningObject.ratioStrings ? tuningObject.ratioStrings[i] : "N/A";
-                        const cents = 1200 * Math.log2(tuningObject.values[i]);
-                        divisionText = `${ratioStr} (${cents.toFixed(1)}¢)`;
-                    } else if (tuningObject.type === "cents") {
-                        const ratioStr = tuningObject.ratioStrings ? tuningObject.ratioStrings[i] : "";
-                        const cents = tuningObject.values[i];
-                        divisionText = ratioStr ? `${ratioStr} (${cents.toFixed(1)}¢)` : `${cents.toFixed(1)}¢`;
-                    }
-                    divisionInfoLabel.textContent = divisionText;
-
-                    key.appendChild(stepLabel);
-                    key.appendChild(intervalLabel);
-                    key.appendChild(divisionInfoLabel);
-                    pianoElement.appendChild(key);
-                    addKeyListeners(key);
+                const t = getCurrentTuningObject();
+                for (let i = 0; i < t.labels.length; i++) {
+                    const k = document.createElement('div'); k.className = 'key'; k.dataset.step = i;
+                    if (t.whiteKeySteps?.includes(i)) k.classList.add('is-white'); else k.classList.add('is-black');
+                    const sl = document.createElement('span'); sl.className = 'key-step-label'; sl.textContent = i;
+                    const il = document.createElement('span'); il.className = 'key-interval-label'; il.textContent = t.labels[i] || `S${i}`;
+                    const dl = document.createElement('span'); dl.className = 'key-division-info';
+                    if (t.type === "edo") dl.textContent = `${((i*1200)/t.edo_divisions).toFixed(1)}¢`; else if (t.type === "ratios") dl.textContent = `${t.ratioStrings?.[i]||"N/A"} (${(1200*Math.log2(t.values[i])).toFixed(1)}¢)`; else if (t.type === "cents") dl.textContent = `${t.ratioStrings?.[i]||""} (${t.values[i].toFixed(1)}¢)`;
+                    k.append(sl, il, dl); pianoElement.appendChild(k); addKeyListeners(k);
                 }
                 applyZoom();
             }
-
-
-            function calculateFrequency(step) { /* ... same ... */ }
-            function calculateFrequency(step) {
-                let frequency;
-                const tuningObject = getCurrentTuningObject();
-
-                if (tuningObject.type === "ratios") {
-                    if (tuningObject.values && tuningObject.values[step] !== undefined) {
-                        frequency = BASE_C4_FREQ * tuningObject.values[step] * Math.pow(2, currentOctaveOffset);
-                    } else { frequency = BASE_C4_FREQ * Math.pow(2, currentOctaveOffset); }
-                } else if (tuningObject.type === "cents") {
-                     if (tuningObject.values && tuningObject.values[step] !== undefined) {
-                        const ratioFromCents = Math.pow(2, tuningObject.values[step] / 1200);
-                        frequency = BASE_C4_FREQ * ratioFromCents * Math.pow(2, currentOctaveOffset);
-                    } else { frequency = BASE_C4_FREQ * Math.pow(2, currentOctaveOffset); }
-                } else if (tuningObject.type === "edo") {
-                    const edo = tuningObject.edo_divisions;
-                    if (edo > 0 && step < edo) {
-                        const totalSteps = (currentOctaveOffset * edo) + step;
-                        frequency = BASE_C4_FREQ * Math.pow(2, totalSteps / edo);
-                    } else { frequency = BASE_C4_FREQ * Math.pow(2, currentOctaveOffset); }
-                } else { frequency = BASE_C4_FREQ * Math.pow(2, currentOctaveOffset); }
-                return frequency;
-            }
-
-
-            function playNote(step) {
-                initAudioContext();
-                if (!audioContext || !masterGainNode) return;
+            function calculateFrequency(step) { const t = getCurrentTuningObject(); const b = BASE_C4_FREQ * Math.pow(2, currentOctaveOffset); if (t.type === "ratios") return b * (t.values?.[step] ?? 1); if (t.type === "cents") return b * Math.pow(2, (t.values?.[step] ?? 0) / 1200); if (t.type === "edo") return BASE_C4_FREQ * Math.pow(2, (currentOctaveOffset * t.edo_divisions + step) / t.edo_divisions); return b; }
+            
+            // --- Audio Playback ---
+            function playNote(step, velocity = 100) {
+                if (!audioContext) initAudioContext();
                 const frequency = calculateFrequency(step);
-                if (isNaN(frequency)) {
-                    console.error("Calculated frequency is NaN for step:", step, "tuning:", currentTuningSystem);
-                    return;
-                }
-                const uniqueId = `${config.pianoId}-${currentTuningSystem}-${step}-${currentOctaveOffset}`;
-
-                if (activeOscillators[uniqueId]) { /* ... retrigger ... */ }
-                if (activeOscillators[uniqueId]) {
-                    const oldOsc = activeOscillators[uniqueId];
-                    oldOsc.individualGainNode.gain.cancelScheduledValues(audioContext.currentTime);
-                    oldOsc.individualGainNode.gain.setValueAtTime(oldOsc.individualGainNode.gain.value, audioContext.currentTime);
-                    oldOsc.individualGainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.01);
-                    oldOsc.oscillator.stop(audioContext.currentTime + 0.01);
-                    delete activeOscillators[uniqueId];
-                }
-
-
-                const oscillator = audioContext.createOscillator();
-                const individualGainNode = audioContext.createGain();
-
-                // Set waveform
-                if (currentWaveType === "organ" && customWaves.organ) {
-                    oscillator.setPeriodicWave(customWaves.organ);
-                } else if (currentWaveType === "bright_pluck" && customWaves.bright_pluck) {
-                    oscillator.setPeriodicWave(customWaves.bright_pluck);
-                } else if (currentWaveType === "pianish" && customWaves.pianish) {
-                    oscillator.setPeriodicWave(customWaves.pianish);
-                } else if (currentWaveType === "synth_saw" && customWaves.synth_saw) {
-                    oscillator.setPeriodicWave(customWaves.synth_saw);
-                }
-                 else {
-                    oscillator.type = currentWaveType; // Fallback to basic types
-                }
+                if (isNaN(frequency)) return;
+                if (midiOutDevice) midiOutDevice.send([0x90 + config.midiChannel - 1, 60 + step, velocity]);
                 
-                oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-                individualGainNode.gain.setValueAtTime(0, audioContext.currentTime);
-                // Apply a slightly different envelope for pianish to simulate faster decay
-                if (currentWaveType === "pianish") {
-                    individualGainNode.gain.linearRampToValueAtTime(0.6, audioContext.currentTime + 0.01); // Quick attack
-                    // For pianish, a faster release than other sounds might be good.
-                    // This is a very simple decay, a real piano is more complex.
-                    // gainNode.gain.setTargetAtTime(0, audioContext.currentTime + 0.02, 0.1); // Faster decay after attack
+                const uniqueId = `${config.pianoId}-${step}`;
+                if (activeOscillators[uniqueId]) stopNote(step, true);
+
+                const noteGain = audioContext.createGain();
+                noteGain.connect(fxChainInput);
+                let oscillators = [];
+
+                if (currentWaveType === 'synth_pad') {
+                    noteGain.gain.setValueAtTime(0, audioContext.currentTime);
+                    noteGain.gain.linearRampToValueAtTime(0.4 * (velocity / 127), audioContext.currentTime + 0.3); // Slow attack
+                    const osc1 = audioContext.createOscillator();
+                    const osc2 = audioContext.createOscillator();
+                    [osc1, osc2].forEach(osc => { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(frequency, audioContext.currentTime); osc.connect(noteGain); });
+                    osc1.detune.value = -7; osc2.detune.value = 7;
+                    oscillators = [osc1, osc2];
                 } else {
-                    individualGainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.02);
+                    noteGain.gain.setValueAtTime(0, audioContext.currentTime);
+                    noteGain.gain.linearRampToValueAtTime(0.6 * (velocity / 127), audioContext.currentTime + 0.01); // Fast attack
+                    const osc = audioContext.createOscillator();
+                    if (customWaves[currentWaveType]) osc.setPeriodicWave(customWaves[currentWaveType]); else osc.type = currentWaveType;
+                    osc.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                    osc.connect(noteGain);
+                    oscillators = [osc];
                 }
 
-                oscillator.connect(individualGainNode);
-                individualGainNode.connect(masterGainNode);
-                oscillator.start();
-                activeOscillators[uniqueId] = { oscillator, individualGainNode, step };
+                oscillators.forEach(osc => osc.start());
+                activeOscillators[uniqueId] = { oscillators, noteGain, step };
             }
 
-            function stopNote(step) { /* ... same ... */ }
-            function stopNote(step) {
-                const uniqueId = `${config.pianoId}-${currentTuningSystem}-${step}-${currentOctaveOffset}`;
-                if (audioContext && activeOscillators[uniqueId]) {
-                    const { oscillator, individualGainNode } = activeOscillators[uniqueId];
-                    // Modify release based on wave type if desired
-                    let releaseTime = 0.15;
-                    if (currentWaveType === "pianish" || currentWaveType === "bright_pluck") {
-                        releaseTime = 0.08; // Faster release for percussive sounds
+            function stopNote(step, isRetrigger = false) {
+                if (midiOutDevice) midiOutDevice.send([0x80 + config.midiChannel - 1, 60 + step, 0]);
+                const uniqueId = `${config.pianoId}-${step}`;
+                if (activeOscillators[uniqueId]) {
+                    const { oscillators, noteGain } = activeOscillators[uniqueId];
+                    const now = audioContext.currentTime;
+                    
+                    // Refactored release time logic for clarity using a switch statement
+                    let releaseTime;
+                    if (isRetrigger) {
+                        releaseTime = 0.01; // Instant stop for re-triggering
+                    } else {
+                        switch (currentWaveType) {
+                            case 'synth_pad':       releaseTime = 1.0; break;
+                            case 'pluck_piano':     releaseTime = 0.35; break; // NEW shorter release
+                            case 'acoustic_piano':
+                            case 'pianish':
+                            case 'bright_pluck':    releaseTime = 0.5; break;
+                            default:                releaseTime = 0.15; break; // for basic sine, square etc.
+                        }
                     }
 
-                    individualGainNode.gain.cancelScheduledValues(audioContext.currentTime);
-                    individualGainNode.gain.setValueAtTime(individualGainNode.gain.value, audioContext.currentTime);
-                    individualGainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + releaseTime);
-                    oscillator.stop(audioContext.currentTime + releaseTime);
+                    noteGain.gain.cancelScheduledValues(now);
+                    noteGain.gain.setTargetAtTime(0, now, releaseTime / 4);
+                    oscillators.forEach(osc => osc.stop(now + releaseTime));
                     delete activeOscillators[uniqueId];
                 }
             }
-
-
-            function addKeyListeners(key) { /* ... same ... */ }
+            
             function addKeyListeners(key) {
                 const step = parseInt(key.dataset.step);
-                const startInteraction = (e) => { e.preventDefault(); playNote(step); key.classList.add('active'); };
-                const endInteraction = () => { stopNote(step); key.classList.remove('active'); };
-                key.addEventListener('mousedown', startInteraction);
-                key.addEventListener('touchstart', startInteraction, { passive: false });
-                key.addEventListener('mouseup', endInteraction);
-                key.addEventListener('touchend', endInteraction);
-                key.addEventListener('touchcancel', endInteraction);
-                key.addEventListener('mouseleave', () => { if (key.classList.contains('active')) endInteraction(); });
+                const start = (e) => { e.preventDefault(); playNote(step); activateKey(step); };
+                const end = () => { stopNote(step); deactivateKey(step); };
+                key.addEventListener('mousedown', start);
+                key.addEventListener('touchstart', start, { passive: false });
+                ['mouseup', 'touchend', 'touchcancel'].forEach(evt => key.addEventListener(evt, end));
+                key.addEventListener('mouseleave', () => { if (key.classList.contains('active')) end(); });
             }
-            
-            function stopAllNotesForThisInstance() { /* ... same ... */ }
-            function stopAllNotesForThisInstance() {
-                 if (!audioContext) return;
-                 pianoElement.querySelectorAll('.key.active').forEach(k => k.classList.remove('active'));
-                 for (const id in activeOscillators) {
-                    const { oscillator, individualGainNode } = activeOscillators[id];
-                    individualGainNode.gain.cancelScheduledValues(audioContext.currentTime);
-                    individualGainNode.gain.setValueAtTime(0, audioContext.currentTime);
-                    oscillator.stop(audioContext.currentTime);
-                    delete activeOscillators[id];
-                }
-            }
+            function stopAllNotesForThisInstance() { Object.values(activeOscillators).forEach(({ step }) => stopNote(step)); pianoElement.querySelectorAll('.key.active').forEach(k => k.classList.remove('active')); }
 
-
+            // --- Initial Setup & Public API (no changes) ---
             tuningSelectElement.addEventListener('change', updateTuningSystem);
-            octaveUpButtonElement.addEventListener('click', () => { currentOctaveOffset++; updateOctaveDisplay(); });
-            octaveDownButtonElement.addEventListener('click', () => { currentOctaveOffset--; updateOctaveDisplay(); });
+            octaveUpButtonElement.addEventListener('click', () => changeOctave(1));
+            octaveDownButtonElement.addEventListener('click', () => changeOctave(-1));
             zoomSliderElement.addEventListener('input', applyZoom);
             volumeSliderElement.addEventListener('input', updateVolume);
             waveTypeSelectElement.addEventListener('change', updateWaveType);
-
-            updateTuningDisplayTitle();
-            generateKeys();
-            updateOctaveDisplay();
-            
-            return { stopAllNotes: stopAllNotesForThisInstance };
+            generateKeys(); updateTuningDisplayTitle(); updateOctaveDisplay();
+            return {
+                playNote, stopNote, activateKey, deactivateKey, changeOctave, changeTuning, changeWave,
+                numKeys: () => getCurrentTuningObject().labels.length,
+                stopAllNotes: stopAllNotesForThisInstance,
+                setEffectEnabled: (fxName, isEnabled) => { const fx = effects[fxName]; if(fx) fx.wet.gain.setTargetAtTime(isEnabled ? fx.originalWetValue ?? 0.5 : 0, audioContext.currentTime, 0.02); },
+                setEffectParam: (fxName, param, value) => {
+                    const fx = effects[fxName]; if(!fx) return; value = parseFloat(value);
+                    const setTarget = (node, v) => node.setTargetAtTime(v, audioContext.currentTime, 0.02);
+                    switch(`${fxName}-${param}`) {
+                        case 'reverb-mix': fx.originalWetValue = value; setTarget(fx.wet.gain, value); break;
+                        case 'delay-mix': fx.originalWetValue = value; setTarget(fx.wet.gain, value); break; case 'delay-time': setTarget(fx.node.delayTime, value); break; case 'delay-feedback': setTarget(fx.feedback.gain, value); break;
+                        case 'chorus-mix': fx.originalWetValue = value; setTarget(fx.wet.gain, value); break; case 'chorus-rate': setTarget(fx.lfo.frequency, value); break; case 'chorus-depth': setTarget(fx.lfoGain.gain, value); break;
+                        case 'phaser-mix': fx.originalWetValue = value; setTarget(fx.wet.gain, value); break; case 'phaser-rate': setTarget(fx.lfo.frequency, value); break; case 'phaser-depth': setTarget(fx.lfoGain.gain, value); break;
+                        case 'flanger-mix': fx.originalWetValue = value; setTarget(fx.wet.gain, value); break; case 'flanger-rate': setTarget(fx.lfo.frequency, value); break; case 'flanger-feedback': setTarget(fx.feedback.gain, value); break;
+                    }
+                }
+            };
         }
 
+        // --- MIDI & Keyboard Handling (no changes) ---
+        function onMIDISuccess(m) {
+            midiAccess = m;
+            document.getElementById('midi-connect-btn').classList.add('enabled');
+            document.getElementById('midi-connect-btn').textContent = 'MIDI Connected';
+            [document.getElementById('midi-in-select-1'), document.getElementById('midi-in-select-2')].forEach(select => {
+                select.innerHTML = '<option value="none">None</option>';
+                midiAccess.inputs.forEach(input => { select.appendChild(new Option(input.name, input.id)); input.onmidimessage = handleMidiMessage; });
+                select.disabled = false;
+            });
+            const outSelect = document.getElementById('midi-out-select');
+            outSelect.innerHTML = '<option value="none">None</option>';
+            if (midiAccess.outputs.size > 0) { midiAccess.outputs.forEach(output => outSelect.appendChild(new Option(output.name, output.id))); outSelect.disabled = false; }
+        }
+        function onMIDIFailure(msg) { console.error(`Failed to get MIDI access - ${msg}`); }
+        function handleMidiMessage(event) {
+            const [command, note, velocity] = event.data;
+            const sourceDeviceID = event.target.id;
+            let targetPiano = null;
+            if (sourceDeviceID === midiInDevice1?.id) targetPiano = pianoInstances[0];
+            else if (sourceDeviceID === midiInDevice2?.id) targetPiano = pianoInstances[1];
+            else return;
+
+            const isNoteOn = (command & 0xF0) === 0x90 && velocity > 0;
+            const isNoteOff = (command & 0xF0) === 0x80 || ((command & 0xF0) === 0x90 && velocity === 0);
+            const noteInOctave = note % 12;
+            const whiteKeyMap = {0:0, 2:1, 4:2, 5:3, 7:4, 9:5, 11:6};
+            
+            if (note >= 48 && noteInOctave in whiteKeyMap) {
+                const step = ((Math.floor(note / 12) - 4) * 7) + whiteKeyMap[noteInOctave];
+                if (step >= 0 && step < targetPiano.numKeys()) {
+                    if (isNoteOn) { targetPiano.playNote(step, velocity); targetPiano.activateKey(step); }
+                    else if (isNoteOff) { targetPiano.stopNote(step); targetPiano.deactivateKey(step); }
+                }
+            } else if (isNoteOn && note >= 49 && note <= 58) {
+                switch(note) {
+                    case 49: targetPiano.changeOctave(-1); break; case 51: targetPiano.changeOctave(1); break;
+                    case 54: targetPiano.changeTuning(-1); break; case 56: targetPiano.changeTuning(1); break;
+                    case 58: targetPiano.changeWave(1); break;
+                }
+            }
+        }
+        function handleComputerKeyDown(e) {
+            if (e.repeat || computerKeysPressed.has(e.key)) return;
+            const keyIndex = computerKeyMap.indexOf(e.key.toLowerCase());
+            if (keyIndex !== -1 && keyIndex < pianoInstances[0].numKeys()) {
+                computerKeysPressed.add(e.key);
+                pianoInstances[0].playNote(keyIndex);
+                pianoInstances[0].activateKey(keyIndex);
+            }
+        }
+        function handleComputerKeyUp(e) {
+            const keyIndex = computerKeyMap.indexOf(e.key.toLowerCase());
+            if (keyIndex !== -1) {
+                computerKeysPressed.delete(e.key);
+                pianoInstances[0].stopNote(keyIndex);
+                pianoInstances[0].deactivateKey(keyIndex);
+            }
+        }
+
+        // --- DOMContentLoaded: Main Setup (no changes) ---
         document.addEventListener('DOMContentLoaded', () => {
             initAudioContext();
-            const defaultInitialOctave = 0;
-
-            pianoInstances.push(createPianoInstance({ /* Piano 1 Config */
-                pianoId: 'piano-keys-1',
-                tuningDisplayId: 'tuning-display-1',
-                tuningSelectId: 'tuning-select-1',
-                octaveDisplayId: 'current-octave-1',
-                octaveUpId: 'octave-up-1',
-                octaveDownId: 'octave-down-1',
-                zoomSliderId: 'zoom-slider-1',
-                volumeSliderId: 'volume-slider-1',
-                waveTypeId: 'wave-type-1',
-                initialOctave: defaultInitialOctave
-            }));
-
-            pianoInstances.push(createPianoInstance({ /* Piano 2 Config */
-                pianoId: 'piano-keys-2',
-                tuningDisplayId: 'tuning-display-2',
-                tuningSelectId: 'tuning-select-2',
-                octaveDisplayId: 'current-octave-2',
-                octaveUpId: 'octave-up-2',
-                octaveDownId: 'octave-down-2',
-                zoomSliderId: 'zoom-slider-2',
-                volumeSliderId: 'volume-slider-2',
-                waveTypeId: 'wave-type-2',
-                initialOctave: defaultInitialOctave
-            }));
-
-            document.addEventListener('visibilitychange', () => { /* ... */ });
-             document.addEventListener('visibilitychange', () => {
-                if (document.hidden) {
-                    pianoInstances.forEach(instance => instance.stopAllNotes());
-                }
+            
+            pianoInstances.push(createPianoInstance({ pianoId: 'piano-keys-1', tuningDisplayId: 'tuning-display-1', tuningSelectId: 'tuning-select-1', octaveDisplayId: 'current-octave-1', octaveUpId: 'octave-up-1', octaveDownId: 'octave-down-1', zoomSliderId: 'zoom-slider-1', volumeSliderId: 'volume-slider-1', waveTypeId: 'wave-type-1', initialOctave: 0, midiChannel: 1 }));
+            pianoInstances.push(createPianoInstance({ pianoId: 'piano-keys-2', tuningDisplayId: 'tuning-display-2', tuningSelectId: 'tuning-select-2', octaveDisplayId: 'current-octave-2', octaveUpId: 'octave-up-2', octaveDownId: 'octave-down-2', zoomSliderId: 'zoom-slider-2', volumeSliderId: 'volume-slider-2', waveTypeId: 'wave-type-2', initialOctave: 0, midiChannel: 2 }));
+            
+            pianoInstances.forEach((instance, i) => {
+                const panel = document.getElementById(`fx-panel-${i+1}`);
+                const fxConfig = { reverb: { name: 'Reverb', params: { mix: { min: 0, max: 1, step: 0.01, value: 0.3 } } }, delay: { name: 'Delay', params: { mix: { min: 0, max: 1, step: 0.01, value: 0.35 }, time: {min: 0.01, max: 2.0, step: 0.01, value: 0.33}, feedback: {min: 0, max: 0.95, step: 0.01, value: 0.4} } }, chorus: { name: 'Chorus', params: { mix: {min:0, max:1, step:0.01, value:0.5}, rate: {min:0.1, max:8, step:0.1, value:0.8}, depth: {min:0.001, max:0.01, step:0.001, value:0.004} } }, phaser: { name: 'Phaser', params: { mix: {min:0, max:1, step:0.01, value:0.6}, rate: {min:0.1, max:8, step:0.1, value:0.5}, depth: {min:100, max:1500, step:10, value:800} } }, flanger: { name: 'Flanger', params: { mix: {min:0, max:1, step:0.01, value:0.4}, rate: {min:0.05, max:5, step:0.01, value:0.1}, feedback: {min:0, max:0.9, step:0.01, value:0.5} } } };
+                Object.entries(fxConfig).forEach(([fxName, config]) => {
+                    const module = document.createElement('div'); module.className = 'fx-module';
+                    let paramsHtml = '';
+                    Object.entries(config.params).forEach(([paramName, paramConfig]) => { paramsHtml += `<div class="fx-param"><label>${paramName}</label><input type="range" min="${paramConfig.min}" max="${paramConfig.max}" step="${paramConfig.step}" value="${paramConfig.value}" data-fx="${fxName}" data-param="${paramName}"></div>`; });
+                    module.innerHTML = `<div class="fx-module-header"><label>${config.name}</label><input type="checkbox" data-fx="${fxName}" data-param="enabled"></div> ${paramsHtml}`;
+                    panel.appendChild(module);
+                });
+                panel.addEventListener('input', (e) => {
+                    const { fx, param } = e.target.dataset;
+                    if (e.target.type === 'checkbox') instance.setEffectEnabled(fx, e.target.checked); else instance.setEffectParam(fx, param, e.target.value);
+                });
             });
+            document.getElementById('midi-connect-btn').addEventListener('click', () => { if (!midiAccess && navigator.requestMIDIAccess) navigator.requestMIDIAccess({ sysex: true }).then(onMIDISuccess, onMIDIFailure); });
+            document.getElementById('midi-in-select-1').addEventListener('change', (e) => { midiInDevice1 = midiAccess?.inputs.get(e.target.value) || null; });
+            document.getElementById('midi-in-select-2').addEventListener('change', (e) => { midiInDevice2 = midiAccess?.inputs.get(e.target.value) || null; });
+            document.getElementById('midi-out-select').addEventListener('change', (e) => { midiOutDevice = midiAccess?.outputs.get(e.target.value) || null; });
+            document.getElementById('skin-select').addEventListener('change', (e) => { document.body.className = e.target.value; });
+            document.addEventListener('keydown', handleComputerKeyDown);
+            document.addEventListener('keyup', handleComputerKeyUp);
+            document.addEventListener('visibilitychange', () => { if (document.hidden) pianoInstances.forEach(p => p.stopAllNotes()); });
         });
     </script>
 </body>
